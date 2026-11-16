@@ -1,0 +1,13 @@
+{
+  "itemGroup.uvp2p": "Example Mod Tab",
+  "block.uvp2p.example_block": "Example Block",
+  "item.uvp2p.example_item": "Example Item",
+
+  "uvp2p.configuration.title": "uv-p2p Configs",
+  "uvp2p.configuration.section.uvp2p.common.toml": "uv-p2p Configs",
+  "uvp2p.configuration.section.uvp2p.common.toml.title": "uv-p2p Configs",
+  "uvp2p.configuration.items": "Item List",
+  "uvp2p.configuration.logDirtBlock": "Log Dirt Block",
+  "uvp2p.configuration.magicNumberIntroduction": "Magic Number Text",
+  "uvp2p.configuration.magicNumber": "Magic Number"
+}
