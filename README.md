@@ -4,4 +4,4 @@
 uvmc-p2p is a Neoforge mod for 1.21.11 to allow **fully** P2P world sharing, with a CDN or GitHub Repository in the middle.
 
 # Contributing
-Refer to [Contributing](CONTRIBUTING.MD) for more information.
+Refer to CONTRIBUTING.md for more information.
