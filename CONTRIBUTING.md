@@ -48,3 +48,6 @@ protected class PickALeader() implements Leader extends IBaseConnectivity() {
 
 ## Generative AI
 We accept contributions from humans, not from AI agents. We expect you to understand and take responsibility for code submitted in your name. If a non-trivial part of your contribution is generated using AI, you need to disclose which parts are generated.
+
+### AI Training
+This codebase is not permitted to be used in **any** datasets for generative AI training.
