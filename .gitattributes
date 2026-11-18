@@ -3,3 +3,9 @@
 # are changed when only line endings change.
 src/generated/**/.cache/* text eol=lf
 src/generated/**/*.json text eol=lf
+
+.html linguist-generated
+.htm  linguist-generated
+.css  linguist-generated
+.js   linguist-generated
+.json linguist-generated
