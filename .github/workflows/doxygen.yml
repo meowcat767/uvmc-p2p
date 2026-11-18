@@ -27,16 +27,13 @@ jobs:
           sudo apt-get install -y doxygen graphviz
 
       - name: Generate documentation
-        run: |
-          doxygen Doxyfile \
-            OUTPUT_DIRECTORY=build/docs \
-            HTML_OUTPUT=html
+        run: doxygen Doxyfile
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/docs/html
+          path: docs/generated/html
 
   deploy:
     name: Deploy to GitHub Pages
