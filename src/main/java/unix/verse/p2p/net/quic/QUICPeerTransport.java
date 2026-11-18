@@ -36,6 +36,17 @@ import unix.verse.p2p.net.PeerConnection;
 import unix.verse.p2p.net.PeerIdentity;
 import unix.verse.p2p.net.PeerTransport;
 
+/**
+ * {@link PeerTransport} over QUIC, built on Netty. Each connection uses one bidirectional
+ * stream that carries the handshake and then length-prefixed messages. The transport owns its
+ * I/O threads until {@link #close()} is called.
+ *
+ * <p>Peers use self-signed certificates and accept any certificate, so traffic is encrypted
+ * but the remote peer is not authenticated.
+ *
+ * @author Damian Daniel
+ * @since 0.1.0
+ */
 public final class QUICPeerTransport implements PeerTransport {
   private static final System.Logger LOGGER =
       System.getLogger(QUICPeerTransport.class.getName());
@@ -48,6 +59,12 @@ public final class QUICPeerTransport implements PeerTransport {
   private static final long STREAM_WINDOW_BYTES = 4L * 1024 * 1024;
 
   private static final ChannelHandler REJECT_STREAMS = new ChannelInitializer<QuicStreamChannel>() {
+    /**
+     * Closes a stream the remote peer opened on a connection this side initiated, since only the
+     * control stream is expected.
+     *
+     * @param stream the new stream; never {@code null}
+     */
     @Override
     protected void initChannel(QuicStreamChannel stream) {
       stream.close();
@@ -63,10 +80,27 @@ public final class QUICPeerTransport implements PeerTransport {
   private final AtomicBoolean closed = new AtomicBoolean();
   private CompletableFuture<Channel> clientChannel;
 
+  /**
+   * Creates a transport with the default handshake timeout of five seconds. Generates a
+   * certificate and starts the I/O threads.
+   *
+   * @param identity the identity to present to other peers; must not be {@code null}
+   * @throws NullPointerException if {@code identity} is {@code null}
+   * @throws IllegalStateException if the certificate cannot be generated
+   */
   public QUICPeerTransport(PeerIdentity identity) {
     this(identity, DEFAULT_HANDSHAKE_TIMEOUT);
   }
 
+  /**
+   * Creates a transport. Generates a certificate and starts the I/O threads.
+   *
+   * @param identity the identity to present to other peers; must not be {@code null}
+   * @param handshakeTimeout how long a peer has to finish the handshake; must not be
+   *     {@code null}
+   * @throws NullPointerException if an argument is {@code null}
+   * @throws IllegalStateException if the certificate cannot be generated
+   */
   public QUICPeerTransport(PeerIdentity identity, Duration handshakeTimeout) {
     this.identity = Objects.requireNonNull(identity, "identity");
     this.handshakeTimeout = Objects.requireNonNull(handshakeTimeout, "handshakeTimeout");
@@ -88,11 +122,28 @@ public final class QUICPeerTransport implements PeerTransport {
         IO_THREADS, new DefaultThreadFactory("uvp2p-quic", true), NioIoHandler.newFactory());
   }
 
+  /**
+   * Returns the identity this transport presents to other peers.
+   *
+   * @return the local identity; never {@code null}
+   */
   @Override
   public PeerIdentity identity() {
     return identity;
   }
 
+  /**
+   * Starts accepting connections. Binds a UDP socket and keeps it open until {@link #close()}.
+   * Only peers that pass the handshake are reported. Each peer may open one stream.
+   *
+   * @param bindAddress the local address to bind; use port {@code 0} to pick a free port;
+   *     must not be {@code null}
+   * @param onConnection called on an I/O thread for each accepted peer and must not block;
+   *     must not be {@code null}
+   * @return a future with the address that was actually bound, or the bind error, or an
+   *     {@link IllegalStateException} if the transport is closed; never {@code null}
+   * @throws NullPointerException if an argument is {@code null}
+   */
   @Override
   public CompletableFuture<InetSocketAddress> listen(
       InetSocketAddress bindAddress, Consumer<PeerConnection> onConnection) {
@@ -112,6 +163,11 @@ public final class QUICPeerTransport implements PeerTransport {
         .initialMaxStreamDataBidirectionalRemote(STREAM_WINDOW_BYTES)
         .initialMaxStreamsBidirectional(1)
         .streamHandler(new ChannelInitializer<QuicStreamChannel>() {
+          /**
+           * Starts the handshake on the control stream an inbound peer opened.
+           *
+           * @param stream the new stream; never {@code null}
+           */
           @Override
           protected void initChannel(QuicStreamChannel stream) {
             HandshakeHandler.install(
@@ -141,6 +197,16 @@ public final class QUICPeerTransport implements PeerTransport {
     return result;
   }
 
+  /**
+   * Connects to a remote peer and performs the handshake. The first call binds a UDP socket on
+   * a free local port, which all later connections share until {@link #close()}.
+   *
+   * @param remoteAddress where the remote peer listens; must not be {@code null}
+   * @return a future with the connection once the handshake succeeded, or a
+   *     {@link unix.verse.p2p.net.HandshakeException} or transport error, or an
+   *     {@link IllegalStateException} if the transport is closed; never {@code null}
+   * @throws NullPointerException if {@code remoteAddress} is {@code null}
+   */
   @Override
   public CompletableFuture<PeerConnection> connect(InetSocketAddress remoteAddress) {
     Objects.requireNonNull(remoteAddress, "remoteAddress");
@@ -170,6 +236,11 @@ public final class QUICPeerTransport implements PeerTransport {
     return result;
   }
 
+  /**
+   * Closes every socket and connection and stops the I/O threads, waiting up to two seconds
+   * for in-flight work. Later calls to {@link #listen} and {@link #connect} return failed
+   * futures. Does nothing if already closed.
+   */
   @Override
   public void close() {
     if (!closed.compareAndSet(false, true))
@@ -182,6 +253,11 @@ public final class QUICPeerTransport implements PeerTransport {
   private void openControlStream(
       QuicChannel quicChannel, CompletableFuture<PeerConnection> result) {
     ChannelHandler initializer = new ChannelInitializer<QuicStreamChannel>() {
+      /**
+       * Starts the handshake on the control stream this side opened.
+       *
+       * @param stream the new stream; never {@code null}
+       */
       @Override
       protected void initChannel(QuicStreamChannel stream) {
         HandshakeHandler.install(
