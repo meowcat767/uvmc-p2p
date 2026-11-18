@@ -39,6 +39,8 @@ protected class PickALeader() implements Leader extends IBaseConnectivity() {
 - Deprecation: If code is marked with @Deprecated, the Javadoc must explain why it was deprecated and what contributors should use instead.
 - Self-Explanatory Code: If a method is short, private, and reads like a sentence (e.g., `private boolean isUserLoggedIn()`), a Javadoc is unnecessary.
 - Required Tags: For any documented method, contributors must include:
+  - @author to allow us to track who created the file
+  - @since to allow us to track when the file was created
   - @param for every input parameter.
 	- @return if the method return type is not void.
   - @throws or @exception for any checked or common unchecked exceptions.
