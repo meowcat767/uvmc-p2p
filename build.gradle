@@ -137,6 +137,22 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    implementation "io.netty:netty-codec-classes-quic:${netty_version}"
+    implementation "org.bouncycastle:bcpkix-jdk18on:${bouncycastle_version}"
+    implementation "org.bouncycastle:bcprov-jdk18on:${bouncycastle_version}"
+
+    ["linux-x86_64", "linux-aarch_64", "osx-x86_64", "osx-aarch_64", "windows-x86_64"].each {
+        runtimeOnly "io.netty:netty-codec-native-quic:${netty_version}:${it}"
+    }
+
+    testImplementation platform("org.junit:junit-bom:${junit_version}")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
