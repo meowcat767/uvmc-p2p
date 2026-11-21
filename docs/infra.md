@@ -61,7 +61,14 @@ stateDiagram-v2
 - A candidate with a majority becomes leader.
 - If the leader drops, a new election starts.
 
-🟡**TODO: Peer discovery.** How do clients find each other before the first election (session code, invite, tracker file in the repo)? Is NAT traversal or a relay needed?
+### Peer discovery
+
+LAN sessions use UDP announcements. Each peer advertises its session identity, peer identity,
+protocol version and QUIC listen address. The discovery listener ignores peers from other
+sessions and protocol versions.
+
+Discovery is separate from the transport interface so LAN, session-code, relay and NAT traversal
+implementations can share the same peer list.
 
 🟡**TODO: Leader failure.** What happens to unpublished changes if the leader crashes mid-session?
 
