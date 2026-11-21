@@ -70,6 +70,10 @@ sessions and protocol versions.
 Discovery is separate from the transport interface so LAN, session-code, relay and NAT traversal
 implementations can share the same peer list.
 
+`PeerNetwork` starts QUIC listening, passes the bound address to discovery, and connects
+automatically whenever discovery reports a peer in the same session. It reports both inbound and
+outbound QUIC connections through one listener.
+
 🟡**TODO: Leader failure.** What happens to unpublished changes if the leader crashes mid-session?
 
 🟡**TODO: Leader handover.** Does a new leader rebuild state from followers or from the last CDN snapshot?
